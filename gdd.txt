@@ -1,0 +1,64 @@
+wizards fighting
+ - key stats 
+	- health: how alive you are: 100
+	- mana: how much mana you have: 100 
+ - health cannot reach 0 else you die 
+ - what abilites do you have access to 
+	- base movement: orthoginal + rest 
+	- moving 
+		- replenish 10 mana while moving
+		- 2 blocks per turn 
+	- resting
+		- first rest replenish 20 mana 
+		- second rest in a row replenish 30 mana 
+		- 3rd rest and onward replenish 50 mana 
+	- other moves depends on your stats 
+	- 5 other moves: actuall magic(b\c you're a mage)
+- stats 
+	- have 6 total stat points 
+	- can spend stat points in any of 4 stats 
+		- Water: buffs and debuffs, mid mana, close range
+		- Fire: damage to the max, mid mana, mid range 
+		- Earth: defensive structures, high mana cost, far range   
+		- Wind: fast movement, low mana, mid range  
+	- stats can be from 0-4 
+	- each stat point unlocks a new move specific to that stat 
+- ranges //don't actually mean anything, just for tips 
+	- manhatan distance 
+	- close range: up to 6 blocks away 
+	- mid range: 6 - 10 blocks away 
+	- far range: more than 10 blocks away
+- stat moves 
+	- Water
+		- 1: Increaced Circulation - 20 mana, double move speed for 3 turns 
+		- 2: Water Spear - 30 mana, deal 50 damage in a direction with range of 3 		
+		- 3: Mana Drain - 20 mana, siphon up to 30 mana from enemies with range of 5
+		- 4: Stagnation - 60 mana, skip target's next 2 turns with range of 8
+	- Fire
+		- 1: Flame - 15 mana, deal 10 damage in a direction with a range of 7
+		- 2: Fire Ball - 30 mana, conjure a ball of fire
+		- 3: Explosion - 50 mana, deal 40 damage in a 3 block radius with range 7 
+		- 4: Aura of fire - 60 mana, deals 30 damage in 6 block radius around you for 3 turns but halfs your movment speed 
+	- Earth
+		- 1: Stone Skin - 25 mana, prevent 20 damage from every attack for 3 turns
+		- 2: Spikes - 30 mana, conjure a patch of spikes of radius 3 with range 10
+		- 3: Boulder - 50 mana, conjure a bolder 
+		- 4: Wall - 70 mana, conjure 5 walls in a line with range 3 
+	- Wind
+		- 1: Wind Bolt - 10 mana, conjure a bolt of wind 
+		- 2: Glide - 20 mana, move 7 blocks in a direction 
+		- 3: Repulsive Blast - 30 mana, send all enemies back 4 block and deal 30 damage to all projectiles with radius of 6 
+		- 4: Tornado - 50 mana, players and enemy projectiles take 20 damage in a 5 block radious around you, you have double the movement speed but half mana production for 2 turns
+- projectile definitions 
+	- Wind Bolt 10 health, 3 speed, 10 damage, 5 lifetime, no tracking, yes passable  
+	- Boulder: 30 health, 2 speed, 40 damage, 8 lifetime, yes tracking, no passable
+	- Fire Ball: 20 health, 3 speed, 30 damage, 3 lifetime, yes tracking, yes passable
+	- Wall: 70 health, 0 speed, 0 damage, 10 lifetime, no tracking, no passable
+	- Spike: 10 health, 0 speed, 10 damage, 6 lifetime, no tracking, yes passible 
+- map 
+	- 40x20 tiles 
+	- tiles 
+		- grass, base movment speed 2
+		- mud, base movment speed 1 
+		- stone, impassible
+		- maybe more 
