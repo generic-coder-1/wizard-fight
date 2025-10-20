@@ -31,19 +31,29 @@ impl Controller {
         container(
             PaneGrid::new(&self.battle_panes, |pane, pane_type, _focus| {
                 let content = match pane_type {
-                    super::BattlePane::Battle => "battke",
-                    super::BattlePane::Info => "info",
-                    super::BattlePane::Control => "control",
+                    super::BattlePane::Battle => container("battle"),
+                    super::BattlePane::Info => container("info"),
+                    super::BattlePane::Control => container("control"),
                 };
 
-                pane_grid::Content::new(container(content).padding(5.0).style(|_theme| {
-                    container::Style {
-                        background: Some(Background::Color(Color::BLACK)),
+                pane_grid::Content::new(
+                    container(
+                        container(content)
+                            .style(|theme| {
+                                container::Style::default()
+                                    .background(Background::Color(Color::BLACK))
+                            })
+                            .width(Length::Fill)
+                            .height(Length::Fill),
+                    )
+                    .padding(2.5)
+                    .style(|_theme| container::Style {
+                        background: Some(Background::Color(Color::WHITE)),
                         ..Default::default()
-                    }
-                }))
+                    }),
+                )
             })
-            .spacing(5.0),
+            .spacing(7.5),
         )
         .width(Length::Fill)
         .height(Length::Fill)

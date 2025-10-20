@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-iced = "0.13.1"
+iced = { version = "0.13.1", features = ["canvas"] }
 itertools = "0.14.0"
 strum = "0.27.2"
 strum_macros = "0.27.2"
