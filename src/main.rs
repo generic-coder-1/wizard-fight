@@ -2,6 +2,7 @@ use controller::Controller;
 
 pub mod controller;
 pub mod helper;
+#[cfg(test)]
 mod test;
 
 fn main() -> iced::Result {
