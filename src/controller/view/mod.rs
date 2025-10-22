@@ -103,11 +103,12 @@ impl Controller {
             ))
             .into(),
         ]);
-        if let Some(entity) = battle.get_entity_at(self.selected_tile.into()){
-            info.extend(match entity{
-                board::Entity::Wizard(w) => {let wiz = battle.get_wizard(w); 
+        if let Some(entity) = battle.get_entity_at(self.selected_tile.into()) {
+            info = info.extend(match entity {
+                board::Entity::Wizard(w) => {
+                    let wiz = battle.get_wizard(w);
                     [Text::new(format!("Team: {}", wiz.team)).into()]
-                },
+                }
                 board::Entity::Projectile(p) => todo!(),
             });
         }
