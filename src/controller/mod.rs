@@ -3,7 +3,7 @@ pub mod model;
 pub mod view;
 
 use iced::widget::pane_grid::{self, Axis, Configuration};
-use message::{Message, SpellSelectMessage};
+use message::{BattleMessage, Message, SpellSelectMessage};
 use model::{Battle, Model, SpellSelect};
 
 pub struct Controller {
@@ -11,6 +11,7 @@ pub struct Controller {
     quit: bool,
     fullscreen: bool,
     battle_panes: pane_grid::State<BattlePane>,
+    selected_tile:(usize, usize),
 }
 
 enum BattlePane {
@@ -36,6 +37,7 @@ impl Default for Controller {
                     b: Box::new(Configuration::Pane(BattlePane::Control)),
                 }),
             }),
+            selected_tile: (0, 0),
         }
     }
 }
@@ -48,6 +50,18 @@ impl Controller {
                     self.update_spell_select(spell_select_message)
                 }
             }
+            Message::Battle(battle_message) => self.update_battle_message(battle_message),
+        }
+    }
+
+    pub fn update_battle_message(&mut self, message: BattleMessage) {
+        let Model::Battle(battle) = &mut self.model else {
+            return;
+        };
+        match message{
+            BattleMessage::TileSelect(x, y) => {
+                self.selected_tile = (x, y);
+            },
         }
     }
 

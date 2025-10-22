@@ -1,16 +1,18 @@
-use board::Board;
+use board::{Board, Entity};
 use effects::Effects;
+use itertools::Itertools;
+use position::Position;
 use projectile::Projectile;
 use spell::Spell;
 use strum::{EnumCount, IntoEnumIterator};
 use wizard::{Team, Wizard};
 
-mod board;
+pub mod board;
 mod effects;
 mod position;
-mod projectile;
+pub mod projectile;
 pub mod spell;
-mod wizard;
+pub mod wizard;
 
 pub enum Model {
     Battle(Battle),
@@ -90,7 +92,7 @@ impl Battle {
                 position: (i, 0_usize).into(),
                 spells: spell_choice.into(),
             })
-            .collect();
+            .collect_vec();
         let projectiles = vec![];
         Self {
             board: Board::new(&wizards, &projectiles),
@@ -99,4 +101,16 @@ impl Battle {
             current_player: 0,
         }
     }
+
+    pub fn get_entity_at(&self, position: Position) -> Option<Entity>{
+        self.board.get_entity_at(position)
+    }
+
+    pub fn get_wizard(&self, entity: usize) -> &Wizard{
+        &self.wizards[entity]
+    } 
+
+    pub fn get_projectile(&self, entity: usize) -> &Projectile{
+        &self.projectiles[entity]
+    } 
 }

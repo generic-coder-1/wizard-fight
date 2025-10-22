@@ -7,7 +7,9 @@ pub enum Message{
 }
 
 #[derive(Debug, Clone)]
-pub enum BattleMessage{}
+pub enum BattleMessage{
+    TileSelect(usize, usize)
+}
 
 #[derive(Debug, Clone)]
 pub enum SpellSelectMessage{
