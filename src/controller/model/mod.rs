@@ -8,7 +8,7 @@ use strum::{EnumCount, IntoEnumIterator};
 use wizard::{Team, Wizard};
 
 pub mod board;
-mod effects;
+pub mod effects;
 mod position;
 pub mod projectile;
 pub mod spell;
@@ -102,15 +102,15 @@ impl Battle {
         }
     }
 
-    pub fn get_entity_at(&self, position: Position) -> Option<Entity>{
+    pub fn get_entity_at(&self, position: Position) -> Option<Entity> {
         self.board.get_entity_at(position)
     }
 
-    pub fn get_wizard(&self, entity: usize) -> &Wizard{
+    pub fn get_wizard(&self, entity: usize) -> &Wizard {
         &self.wizards[entity]
-    } 
+    }
 
-    pub fn get_projectile(&self, entity: usize) -> &Projectile{
+    pub fn get_projectile(&self, entity: usize) -> &Projectile {
         &self.projectiles[entity]
-    } 
+    }
 }

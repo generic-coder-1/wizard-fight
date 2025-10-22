@@ -1,4 +1,6 @@
-#[derive(strum_macros::EnumIter, Clone, Copy)]
+use strum_macros::EnumIter;
+
+#[derive(strum_macros::EnumIter, Clone, Copy, Debug)]
 pub enum Spell {
     //water
     IncreasedCirculation = 0,
@@ -35,11 +37,11 @@ impl Spell {
             3 => SpellElement::Wind,
             _ => unreachable!()
         };
-        (element, points)
+        (element, points + 1)
     }
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, EnumIter, PartialEq, Eq)]
 pub enum SpellElement {
     Water,
     Fire,

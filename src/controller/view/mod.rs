@@ -17,7 +17,10 @@ use crate::{
 
 use super::{
     message::{BattleMessage, PointChange, SpellSelectMessage},
-    model::{board, spell::SpellElement, wizard::WIZARD_COLORS, Battle, Model, SpellSelect},
+    model::{
+        board, effects::Effects, spell::SpellElement, wizard::WIZARD_COLORS, Battle, Model,
+        SpellSelect,
+    },
 };
 
 const GREY: Color = from_rgb8(50, 50, 50);
@@ -107,12 +110,37 @@ impl Controller {
             info = info.extend(match entity {
                 board::Entity::Wizard(w) => {
                     let wiz = battle.get_wizard(w);
-                    [Text::new(format!("Team: {}", wiz.team)).into()]
+                    [
+                        Text::new(format!("Team: {}", wiz.team)).into(),
+                        Text::new(format!("Health: {}", wiz.health)).into(),
+                        Text::new(format!("Mana: {}", wiz.mana)).into(),
+                        Text::new(format!(
+                            "Effects: {:?}",
+                            wiz.effects
+                                .iter()
+                                .enumerate()
+                                .filter(|(_, i)| { **i != 0 })
+                                .map(|(i, time)| {
+                                    format!(
+                                        "{} for {} turns",
+                                        Effects::from_repr(i)
+                                            .expect("effects cannot be longer than Effects"),
+                                        time
+                                    )
+                                })
+                                .collect_vec()
+                        ))
+                        .into(),
+                        Text::new(format!("Spells: {:?}", wiz.spells)).into(),
+                    ]
                 }
                 board::Entity::Projectile(p) => todo!(),
             });
         }
-        container(info).center(Length::Fill).into()
+        container(info.padding(10.0))
+            .align_top(Length::Fill)
+            .align_left(Length::Fill)
+            .into()
     }
 
     pub fn view_battle<'a>(&'a self, battle: &'a Battle) -> Element<'a, BattleMessage> {
