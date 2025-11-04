@@ -1,12 +1,8 @@
 use iced::{
-    alignment::Horizontal,
-    widget::{
+    alignment::Horizontal, widget::{
         button, column, container, pane_grid, responsive, row, stack, text::LineHeight, tooltip,
         Button, Column, Container, PaneGrid, Row, Space, Text,
-    },
-    Alignment, Background, Border, Color, Element,
-    Length::{self, Fill, FillPortion},
-    Theme,
+    }, Alignment::{self, Center}, Background, Border, Color, Element, Font, Length::{self, Fill, FillPortion}, Theme
 };
 use itertools::Itertools;
 
@@ -191,7 +187,49 @@ impl Controller {
         .height(Length::Shrink);
         let wizard = battle.get_current_wizard();
 
-        let movment_controls = Column::new();
+        let d_pad = || {
+            responsive(move |size| {
+                let length = size.width.min(size.height);
+                let spacer = || Space::new(Length::FillPortion(1), Length::FillPortion(1));
+                let button_maker = |text, dir| {
+                    let border = if self
+                        .current_direction
+                        .is_some_and(|curr_dir| curr_dir == dir)
+                    {
+                        Border::default().width(3).color(YELLOW)
+                    } else {
+                        Border::default()
+                    };
+                    button(Text::new(text).align_x(Center).align_y(Center).width(Length::Fill).height(Length::Fill))
+                        .on_press(BattleMessage::DirectionSelect(dir))
+                        .width(Length::FillPortion(1))
+                        .height(Length::FillPortion(1))
+                        .style(move |theme: &Theme, status| {
+                            let mut b = button::Catalog::style(
+                                theme,
+                                &<Theme as button::Catalog>::default(),
+                                status,
+                            );
+                            b.border = border;
+                            b
+                        })
+                };
+                container(row![
+                    column![spacer(), button_maker("←", Direction::Left), spacer()],
+                    column![
+                        button_maker("↑", Direction::Up),
+                        spacer(),
+                        button_maker("↓", Direction::Down)
+                    ],
+                    column![spacer(), button_maker("→", Direction::Right), spacer()],
+                ])
+                .width(length)
+                .height(length)
+                .into()
+            })
+        };
+
+        let movment_controls = Column::new().push(d_pad());
 
         let mut spell_controls = Row::new();
         //spell selecting
@@ -217,7 +255,7 @@ impl Controller {
                             )
                             .into()
                         })
-                        .intersperse_with(|| Space::with_height(Length::Fill).into()),
+                        .intersperse_with(|| Space::with_height(5.0).into()),
                 )
                 .height(Length::FillPortion(1)),
                 Space::with_height(Length::FillPortion(1))
@@ -236,46 +274,7 @@ impl Controller {
                     })]
                     .into()
                 }
-                super::model::spell::SpellInputType::Direction => responsive(move |size| {
-                    let length = size.width.min(size.height);
-                    let spacer = || Space::new(Length::FillPortion(1), Length::FillPortion(1));
-                    let button_maker = |text, dir| {
-                        let border = if self
-                            .current_direction
-                            .is_some_and(|curr_dir| curr_dir == dir)
-                        {
-                            Border::default().width(3).color(YELLOW)
-                        } else {
-                            Border::default()
-                        };
-                        button(text)
-                            .on_press(BattleMessage::DirectionSelect(dir))
-                            .width(Length::FillPortion(1))
-                            .height(Length::FillPortion(1))
-                            .style(move |theme: &Theme, status| {
-                                let mut b = button::Catalog::style(
-                                    theme,
-                                    &<Theme as button::Catalog>::default(),
-                                    status,
-                                );
-                                b.border = border;
-                                b
-                            })
-                    };
-                    container(row![
-                        column![spacer(), button_maker("<", Direction::Left), spacer()],
-                        column![
-                            button_maker("Ʌ", Direction::Up),
-                            spacer(),
-                            button_maker("V", Direction::Down)
-                        ],
-                        column![spacer(), button_maker(">", Direction::Right), spacer()],
-                    ])
-                    .width(length)
-                    .height(length)
-                    .into()
-                })
-                .into(),
+                super::model::spell::SpellInputType::Direction => d_pad().into(),
             };
             spell_controls =
                 spell_controls.push(column![Text::new(format!("{spell:?}")), control_info]);
