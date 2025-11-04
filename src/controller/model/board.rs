@@ -40,7 +40,7 @@ impl Board {
     }
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, strum_macros::EnumIs)]
 pub enum Entity {
     Wizard(usize),
     Projectile(usize),

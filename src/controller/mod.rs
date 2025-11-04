@@ -2,16 +2,25 @@ pub mod message;
 pub mod model;
 pub mod view;
 
-use iced::widget::pane_grid::{self, Axis, Configuration};
+use iced::{
+    widget::pane_grid::{self, Axis, Configuration},
+    Task,
+};
 use message::{BattleMessage, Message, SpellSelectMessage};
-use model::{Battle, Model, SpellSelect};
+use model::{
+    position::Direction, spell::{SpellInputType, SPELL_POSITION_FILTER}, Battle, Model, SpellSelect
+};
 
 pub struct Controller {
     model: Model,
     quit: bool,
     fullscreen: bool,
     battle_panes: pane_grid::State<BattlePane>,
-    selected_tile:(usize, usize),
+    hovered_tile: (usize, usize),
+    control_page: isize,
+    selected_tile: Option<(usize, usize)>,
+    current_spell_index: Option<usize>,
+    current_direction: Option<Direction>,
 }
 
 enum BattlePane {
@@ -37,20 +46,27 @@ impl Default for Controller {
                     b: Box::new(Configuration::Pane(BattlePane::Control)),
                 }),
             }),
-            selected_tile: (0, 0),
+            hovered_tile: (0, 0),
+            selected_tile: None,
+            control_page: 0,
+            current_spell_index: None,
+            current_direction: None,
         }
     }
 }
 
 impl Controller {
-    pub fn update(&mut self, message: Message) {
+    pub fn update(&mut self, message: Message) -> Task<Message> {
         match message {
             Message::SpellSelect(spell_select_message) => {
-                if let Model::SpellSelect(spell_select) = &mut self.model {
-                    self.update_spell_select(spell_select_message)
-                }
+                self.update_spell_select(spell_select_message)
             }
             Message::Battle(battle_message) => self.update_battle_message(battle_message),
+        };
+        if self.quit {
+            iced::exit()
+        } else {
+            Task::none()
         }
     }
 
@@ -58,10 +74,26 @@ impl Controller {
         let Model::Battle(battle) = &mut self.model else {
             return;
         };
-        match message{
+        match message {
             BattleMessage::TileSelect(x, y) => {
-                self.selected_tile = (x, y);
-            },
+                        self.hovered_tile = (x, y);
+                        if let Some(index) = self.current_spell_index {
+                            if let SpellInputType::Position(filter_index) =
+                                battle.get_current_wizard().spells[index].spell_input_type()
+                            {
+                                if (SPELL_POSITION_FILTER[*filter_index])(battle, (x, y).into()) {
+                                    self.selected_tile = Some((x, y));
+                                }
+                            }
+                        }
+                    }
+            BattleMessage::ControlPageCycle(forward) => {
+                        self.control_page += if forward { 1 } else { -1 };
+                    }
+            BattleMessage::SpellChoose(spell_index) => {
+                        self.current_spell_index = Some(spell_index);
+                    }
+            BattleMessage::DirectionSelect(direction) => self.current_direction = Some(direction)
         }
     }
 

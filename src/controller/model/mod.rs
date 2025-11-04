@@ -9,7 +9,7 @@ use wizard::{Team, Wizard};
 
 pub mod board;
 pub mod effects;
-mod position;
+pub mod position;
 pub mod projectile;
 pub mod spell;
 pub mod wizard;
@@ -108,6 +108,10 @@ impl Battle {
 
     pub fn get_wizard(&self, entity: usize) -> &Wizard {
         &self.wizards[entity]
+    }
+
+    pub fn get_current_wizard(&self) -> &Wizard{
+        &self.wizards[self.current_player]
     }
 
     pub fn get_projectile(&self, entity: usize) -> &Projectile {

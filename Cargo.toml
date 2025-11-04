@@ -8,4 +8,3 @@ iced = { version = "0.13.1", features = ["canvas", "lazy"] }
 itertools = "0.14.0"
 strum = "0.27.2"
 strum_macros = "0.27.2"
-
