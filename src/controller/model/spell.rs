@@ -1,4 +1,4 @@
-use strum_macros::EnumIter;
+use strum_macros::{EnumIs, EnumIter};
 
 use super::{position::Position, Battle};
 
@@ -45,7 +45,6 @@ impl Spell {
     pub fn spell_input_type(self) -> &'static SpellInputType {
         match self {
             Self::IncreasedCirculation
-            | Self::ManaDrain
             | Self::AuraOfFire
             | Self::StoneSkin
             | Self::RepulsiveBlast
@@ -60,10 +59,12 @@ impl Spell {
             Spell::Explosion => &SpellInputType::Position(2),
             Spell::Spikes => &SpellInputType::Position(3),
             Spell::Wall => &SpellInputType::Position(0),
+            Self::ManaDrain => &SpellInputType::Position(4),
         }
     }
 }
 
+#[derive(EnumIs)]
 pub enum SpellInputType {
     None,
     Position(usize),
@@ -85,10 +86,19 @@ pub const SPELL_POSITION_FILTER: &[&'static dyn Fn(&Battle, Position) -> bool] =
     &|battle: &Battle, pos: Position| {
         let wiz = battle.get_current_wizard();
         let dist = wiz.position.apply(usize::abs_diff, pos);
-        battle.get_entity_at(pos).is_some_and(|ent| ent.is_wizard()) && (dist.x + dist.y < 8)
+        battle.get_entity_at(pos).is_some_and(|ent| ent.is_wizard())
+            && (wiz.position != pos)
+            && (dist.x + dist.y < 8)
     },
     distance_spell_position_filter!(7),
     distance_spell_position_filter!(10),
+    &|battle: &Battle, pos: Position| {
+        let wiz = battle.get_current_wizard();
+        let dist = wiz.position.apply(usize::abs_diff, pos);
+        battle.get_entity_at(pos).is_some_and(|ent| ent.is_wizard())
+            && (wiz.position != pos)
+            && (dist.x + dist.y < 5)
+    },
 ];
 
 #[derive(Debug, Clone, Copy, EnumIter, PartialEq, Eq)]

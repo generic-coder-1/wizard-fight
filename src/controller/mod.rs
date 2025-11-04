@@ -8,7 +8,9 @@ use iced::{
 };
 use message::{BattleMessage, Message, SpellSelectMessage};
 use model::{
-    position::Direction, spell::{SpellInputType, SPELL_POSITION_FILTER}, Battle, Model, SpellSelect
+    position::Direction,
+    spell::{SpellInputType, SPELL_POSITION_FILTER},
+    Battle, Model, SpellSelect,
 };
 
 pub struct Controller {
@@ -76,24 +78,33 @@ impl Controller {
         };
         match message {
             BattleMessage::TileSelect(x, y) => {
-                        self.hovered_tile = (x, y);
-                        if let Some(index) = self.current_spell_index {
-                            if let SpellInputType::Position(filter_index) =
-                                battle.get_current_wizard().spells[index].spell_input_type()
-                            {
-                                if (SPELL_POSITION_FILTER[*filter_index])(battle, (x, y).into()) {
-                                    self.selected_tile = Some((x, y));
-                                }
-                            }
+                self.hovered_tile = (x, y);
+                if let Some(index) = self.current_spell_index {
+                    if let SpellInputType::Position(filter_index) =
+                        battle.get_current_wizard().spells[index].spell_input_type()
+                    {
+                        if (SPELL_POSITION_FILTER[*filter_index])(battle, (x, y).into()) {
+                            self.selected_tile = Some((x, y));
                         }
                     }
+                }
+            }
             BattleMessage::ControlPageCycle(forward) => {
-                        self.control_page += if forward { 1 } else { -1 };
-                    }
+                self.control_page += if forward { 1 } else { -1 };
+            }
             BattleMessage::SpellChoose(spell_index) => {
-                        self.current_spell_index = Some(spell_index);
+                self.current_spell_index = Some(spell_index);
+                if let SpellInputType::Position(i) =
+                    battle.get_current_wizard().spells[spell_index].spell_input_type()
+                {
+                    if let Some(pos) = self.selected_tile {
+                        if !SPELL_POSITION_FILTER[*i](battle, pos.into()) {
+                            self.selected_tile = None;
+                        }
                     }
-            BattleMessage::DirectionSelect(direction) => self.current_direction = Some(direction)
+                }
+            }
+            BattleMessage::DirectionSelect(direction) => self.current_direction = Some(direction),
         }
     }
 

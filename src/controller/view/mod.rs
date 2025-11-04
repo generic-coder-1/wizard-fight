@@ -29,7 +29,7 @@ use super::{
 
 const GREY: Color = from_rgb8(50, 50, 50);
 const YELLOW: Color = from_rgb8(200, 200, 0);
-const BLUE: Color = from_rgb8(0, 0, 200);
+const GREEN: Color = from_rgb8(0, 200, 0);
 const ORANGE: Color = from_rgb8(255, 140, 0);
 
 impl Controller {
@@ -59,7 +59,13 @@ impl Controller {
                         let mut b = Border::default().rounded(2.0);
                         match (x, y) {
                             val if val == self.hovered_tile => b = b.color(YELLOW).width(2.0),
-                            val if self.selected_tile.is_some_and(|tile| val == tile) => {
+                            val if self.selected_tile.is_some_and(|tile| val == tile)
+                                && self.current_spell_index.is_some_and(|i| {
+                                    battle.get_current_wizard().spells[i]
+                                        .spell_input_type()
+                                        .is_position()
+                                }) =>
+                            {
                                 b = b.color(ORANGE).width(2.0)
                             }
                             val if self.current_spell_index.is_some_and(|i| {
@@ -72,7 +78,7 @@ impl Controller {
                                 }
                             }) =>
                             {
-                                b = b.color(BLUE).width(2.0)
+                                b = b.color(GREEN).width(2.0)
                             }
                             _ => {}
                         }
