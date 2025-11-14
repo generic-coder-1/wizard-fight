@@ -1,4 +1,4 @@
-use super::model::{position::Direction, spell::SpellElement};
+use super::{model::{position::Direction, spell::SpellElement}, view::controls::Control};
 
 #[derive(Debug, Clone)]
 pub enum Message {
@@ -12,6 +12,7 @@ pub enum BattleMessage {
     ControlPageCycle(bool),
     SpellChoose(usize),
     DirectionSelect(Direction),
+    ConfirmAction(Control),
 }
 
 #[derive(Debug, Clone)]

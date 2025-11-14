@@ -13,7 +13,7 @@ wizards fighting
 		- second rest in a row replenish 30 mana 
 		- 3rd rest and onward replenish 50 mana 
 	- other moves depends on your stats 
-	- 5 other moves: actuall magic(b\c you're a mage)
+	- 6 other moves: actuall magic(b\c you're a mage)
 - stats 
 	- have 6 total stat points 
 	- can spend stat points in any of 4 stats 
@@ -47,14 +47,16 @@ wizards fighting
 	- Wind
 		- 1: Wind Bolt - 10 mana, conjure a bolt of wind 
 		- 2: Glide - 20 mana, move 7 blocks in a direction 
-		- 3: Repulsive Blast - 30 mana, send all enemies back 4 block and deal 30 damage to all projectiles with radius of 6 
+		- 3: Repulsive Blast - 30 mana, send all enemies back 4 block and deal 20 damage to all projectiles with radius of 6 
 		- 4: Tornado - 50 mana, players and enemy projectiles take 20 damage in a 5 block radious around you, you have double the movement speed but half mana production for 2 turns
 - projectile definitions 
-	- Wind Bolt 10 health, 3 speed, 10 damage, 5 lifetime, no tracking, yes passable  
-	- Boulder: 30 health, 2 speed, 40 damage, 8 lifetime, yes tracking, no passable
-	- Fire Ball: 20 health, 3 speed, 30 damage, 3 lifetime, yes tracking, yes passable
-	- Wall: 70 health, 0 speed, 0 damage, 10 lifetime, no tracking, no passable
-	- Spike: 10 health, 0 speed, 10 damage, 6 lifetime, no tracking, yes passible 
+  - projectile's damage also acts as thier health
+  - projectiles take 2x damage
+	- Wind Bolt  3 speed, 10 damage, 5 lifetime, no tracking, yes passable  
+	- Boulder:  2 speed, 40 damage, 8 lifetime, yes tracking, no passable
+	- Fire Ball:  3 speed, 30 damage, 3 lifetime, yes tracking, yes passable
+	- Wall:  0 speed, 120 damage, 10 lifetime, no tracking, no passable
+	- Spike:  0 speed, 10 damage, 6 lifetime, no tracking, yes passible 
 - map 
 	- 40x20 tiles 
 	- tiles 

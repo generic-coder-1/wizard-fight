@@ -1,10 +1,16 @@
+use controls::Control;
 use iced::{
-    alignment::Horizontal, widget::{
-        button, column, container, pane_grid, responsive, row, stack, text::LineHeight, tooltip,
-        Button, Column, Container, PaneGrid, Row, Space, Text,
-    }, Alignment::{self, Center}, Background, Border, Color, Element, Font, Length::{self, Fill, FillPortion}, Theme
+    alignment::Horizontal,
+    widget::{
+        button, column, container, pane_grid, responsive, row, stack, text::LineHeight, Button,
+        Column, Container, PaneGrid, Row, Space, Text,
+    },
+    Alignment, Background, Border, Color, Element,
+    Length::{self, Fill, FillPortion},
+    Theme,
 };
 use itertools::Itertools;
+use strum::{EnumCount, IntoEnumIterator};
 
 use crate::{
     controller::{message::Message, Controller},
@@ -16,16 +22,18 @@ use super::{
     model::{
         board,
         effects::Effects,
-        position::Direction,
-        spell::{SpellElement, SPELL_POSITION_FILTER},
+        spell::{SpellElement, SpellInputType, SPELL_POSITION_FILTER},
         wizard::WIZARD_COLORS,
         Battle, Model, SpellSelect,
     },
 };
 
+pub mod controls;
+
 const GREY: Color = from_rgb8(50, 50, 50);
 const YELLOW: Color = from_rgb8(200, 200, 0);
 const GREEN: Color = from_rgb8(0, 200, 0);
+const RED: Color = from_rgb8(200, 0, 0);
 const ORANGE: Color = from_rgb8(255, 140, 0);
 
 impl Controller {
@@ -56,23 +64,54 @@ impl Controller {
                         match (x, y) {
                             val if val == self.hovered_tile => b = b.color(YELLOW).width(2.0),
                             val if self.selected_tile.is_some_and(|tile| val == tile)
-                                && self.current_spell_index.is_some_and(|i| {
+                                && (self.current_spell_index.is_some_and(|i| {
                                     battle.get_current_wizard().spells[i]
                                         .spell_input_type()
                                         .is_position()
-                                }) =>
+                                }) || self.get_control() == Control::Movement) =>
                             {
                                 b = b.color(ORANGE).width(2.0)
                             }
-                            val if self.current_spell_index.is_some_and(|i| {
-                                if let super::model::spell::SpellInputType::Position(j) =
+                            val if (self.get_control() == Control::Spell
+                                && self.current_spell_index.is_some_and(|i| {
+                                    match battle.get_current_wizard().spells[i].spell_input_type() {
+                                        SpellInputType::None(damage_filter) => {
+                                            damage_filter(battle, (val.0, val.1).into())
+                                        }
+                                        SpellInputType::Position(
+                                            position_filter,
+                                            damage_filter,
+                                        ) => self.selected_tile.is_some_and(|p1| {
+                                            SPELL_POSITION_FILTER[*position_filter](
+                                                battle,
+                                                p1.into(),
+                                            ) && damage_filter(
+                                                battle,
+                                                p1.into(),
+                                                (val.0, val.1).into(),
+                                            )
+                                        }),
+                                        SpellInputType::Direction(damage_filter) => {
+                                            self.current_direction.is_some_and(|dir| {
+                                                damage_filter(battle, dir, (val.0, val.1).into())
+                                            })
+                                        }
+                                    }
+                                })) =>
+                            {
+                                b = b.color(RED).width(2.0)
+                            }
+                            val if (self.current_spell_index.is_some_and(|i| {
+                                if let super::model::spell::SpellInputType::Position(j, _) =
                                     battle.get_current_wizard().spells[i].spell_input_type()
                                 {
                                     SPELL_POSITION_FILTER[*j](battle, (val.0, val.1).into())
                                 } else {
                                     false
                                 }
-                            }) =>
+                            }) && self.get_control() == Control::Spell)
+                                || (self.get_control() == Control::Movement
+                                    && battle.wizard_can_move((val.0, val.1).into())) =>
                             {
                                 b = b.color(GREEN).width(2.0)
                             }
@@ -167,15 +206,22 @@ impl Controller {
             .into()
     }
 
+    pub fn get_control(&self) -> Control {
+        let menu_page = self.control_page.rem_euclid(Control::COUNT as isize) as usize;
+        Control::iter()
+            .cycle()
+            .nth(menu_page)
+            .expect("its in a cycle and should never return None")
+    }
+
     fn view_battle_controls(&self, battle: &Battle) -> Element<BattleMessage> {
-        let menu_names = ["Movment", "Spells"];
-        let menu_page = self.control_page.rem_euclid(menu_names.len() as isize) as usize;
+        let controls = self.get_control();
         let menu_bar: Row<'_, BattleMessage> = Row::with_children([
             button("<")
                 .on_press(BattleMessage::ControlPageCycle(false))
                 .into(),
             Space::new(FillPortion(1), 0.0).into(),
-            container(menu_names[menu_page])
+            container(Into::<&'static str>::into(controls))
                 .center_y(Length::Fill)
                 .into(),
             Space::new(FillPortion(1), 0.0).into(),
@@ -185,112 +231,30 @@ impl Controller {
         ])
         .width(Length::Fill)
         .height(Length::Shrink);
-        let wizard = battle.get_current_wizard();
 
-        let d_pad = || {
-            responsive(move |size| {
-                let length = size.width.min(size.height);
-                let spacer = || Space::new(Length::FillPortion(1), Length::FillPortion(1));
-                let button_maker = |text, dir| {
-                    let border = if self
-                        .current_direction
-                        .is_some_and(|curr_dir| curr_dir == dir)
-                    {
-                        Border::default().width(3).color(YELLOW)
-                    } else {
-                        Border::default()
-                    };
-                    button(Text::new(text).align_x(Center).align_y(Center).width(Length::Fill).height(Length::Fill))
-                        .on_press(BattleMessage::DirectionSelect(dir))
-                        .width(Length::FillPortion(1))
-                        .height(Length::FillPortion(1))
-                        .style(move |theme: &Theme, status| {
-                            let mut b = button::Catalog::style(
-                                theme,
-                                &<Theme as button::Catalog>::default(),
-                                status,
-                            );
-                            b.border = border;
-                            b
-                        })
-                };
-                container(row![
-                    column![spacer(), button_maker("←", Direction::Left), spacer()],
-                    column![
-                        button_maker("↑", Direction::Up),
-                        spacer(),
-                        button_maker("↓", Direction::Down)
-                    ],
-                    column![spacer(), button_maker("→", Direction::Right), spacer()],
-                ])
-                .width(length)
-                .height(length)
-                .into()
-            })
-        };
-
-        let movment_controls = Column::new().push(d_pad());
-
-        let mut spell_controls = Row::new();
-        //spell selecting
-        spell_controls = spell_controls
-            .push(column![
-                Column::with_children(
-                    wizard
-                        .spells
-                        .iter()
-                        .enumerate()
-                        .map(|(i, spell)| -> Element<BattleMessage> {
-                            tooltip(
-                                button(Text::new(i.to_string()))
-                                    .on_press(BattleMessage::SpellChoose(i)),
-                                container(Text::new(format!("{spell:?}")))
-                                    .padding(2)
-                                    .style(|_| {
-                                        container::Style::default()
-                                            .background(Background::Color(GREY))
-                                            .border(Border::default().width(2).color(Color::BLACK))
-                                    }),
-                                tooltip::Position::Left,
-                            )
-                            .into()
-                        })
-                        .intersperse_with(|| Space::with_height(5.0).into()),
-                )
-                .height(Length::FillPortion(1)),
-                Space::with_height(Length::FillPortion(1))
-            ])
-            .push(Space::with_width(10.0)); //padding
-                                            //spell control info
-        if let Some(spell_index) = self.current_spell_index {
-            let spell = wizard.spells[spell_index];
-            let control_info: Element<BattleMessage> = match spell.spell_input_type() {
-                super::model::spell::SpellInputType::None => container("").into(),
-                super::model::spell::SpellInputType::Position(_) => {
-                    column![Text::new(if let Some((x, y)) = self.selected_tile {
-                        format!("x: {x}, y: {y}")
-                    } else {
-                        "No Position Selected".to_owned()
-                    })]
-                    .into()
-                }
-                super::model::spell::SpellInputType::Direction => d_pad().into(),
-            };
-            spell_controls =
-                spell_controls.push(column![Text::new(format!("{spell:?}")), control_info]);
-        }
-
-        let controls: [Element<BattleMessage>; 2] =
-            [movment_controls.into(), spell_controls.into()];
+        let control_view = self.view_controls(battle, controls);
         container(column![
             menu_bar,
-            container(
-                controls
-                    .into_iter()
-                    .nth(menu_page)
-                    .expect("menu_page should not be greater than the amount of pages")
-            )
-            .padding(10.0),
+            container(stack![
+                container(control_view)
+                    .width(Length::Fill)
+                    .height(Length::Fill),
+                if self.controls_inputted(battle, controls) {
+                    container(column![
+                        row![
+                            Button::new("Confirm").on_press(BattleMessage::ConfirmAction(controls)),
+                            Space::new(Length::Fixed(10.0), Length::Shrink)
+                        ],
+                        Space::new(Length::Shrink, Length::Fixed(10.0))
+                    ])
+                    .align_bottom(Length::Fill)
+                    .align_right(Length::Fill)
+                    .into()
+                } else {
+                    Into::<Element<BattleMessage>>::into("")
+                }
+            ])
+            .padding(10.0)
         ])
         .align_top(Length::Fill)
         .align_left(Length::Fill)
@@ -299,7 +263,7 @@ impl Controller {
 
     pub fn view_battle<'a>(&'a self, battle: &'a Battle) -> Element<'a, BattleMessage> {
         container(
-            PaneGrid::new(&self.battle_panes, |pane, pane_type, _focus| {
+            PaneGrid::new(&self.battle_panes, |_pane, pane_type, _focus| {
                 let content = match pane_type {
                     super::BattlePane::Battle => container(self.view_board(battle)),
                     super::BattlePane::Info => container(self.view_battle_info(battle)),
@@ -309,7 +273,7 @@ impl Controller {
                 pane_grid::Content::new(
                     container(
                         container(content)
-                            .style(|theme| {
+                            .style(|_theme| {
                                 container::Style::default()
                                     .background(Background::Color(Color::BLACK))
                             })

@@ -1,10 +1,6 @@
-use std::array::from_fn;
+use std::{array::from_fn, mem::swap};
 
-use super::{
-    position::Position,
-    projectile::Projectile,
-    wizard::Wizard,
-};
+use super::{position::Position, projectile::Projectile, wizard::Wizard};
 
 pub const WIDTH: usize = 30;
 pub const HEIGHT: usize = 20;
@@ -37,6 +33,15 @@ impl Board {
 
     pub fn get_entity_at(&self, position: Position) -> Option<Entity> {
         self.board.get(Self::pos_to_index(position)).cloned()?
+    }
+
+    pub fn remove_entity_at(&mut self, position: Position) -> Option<Entity> {
+        self.board[Self::pos_to_index(position)].take()
+    }
+
+    pub fn swap_enttities(&mut self, p1: Position, p2: Position) {
+        self.board
+            .swap(Self::pos_to_index(p1), Self::pos_to_index(p2));
     }
 }
 

@@ -10,8 +10,9 @@ use message::{BattleMessage, Message, SpellSelectMessage};
 use model::{
     position::Direction,
     spell::{SpellInputType, SPELL_POSITION_FILTER},
-    Battle, Model, SpellSelect,
+    Battle, Model,
 };
+use view::controls::Control;
 
 pub struct Controller {
     model: Model,
@@ -73,6 +74,7 @@ impl Controller {
     }
 
     pub fn update_battle_message(&mut self, message: BattleMessage) {
+        let control = self.get_control();
         let Model::Battle(battle) = &mut self.model else {
             return;
         };
@@ -80,7 +82,7 @@ impl Controller {
             BattleMessage::TileSelect(x, y) => {
                 self.hovered_tile = (x, y);
                 if let Some(index) = self.current_spell_index {
-                    if let SpellInputType::Position(filter_index) =
+                    if let SpellInputType::Position(filter_index, _) =
                         battle.get_current_wizard().spells[index].spell_input_type()
                     {
                         if (SPELL_POSITION_FILTER[*filter_index])(battle, (x, y).into()) {
@@ -88,13 +90,26 @@ impl Controller {
                         }
                     }
                 }
+                if control == Control::Movement && battle.wizard_can_move((x, y).into()) {
+                    self.selected_tile = Some((x, y));
+                }
             }
             BattleMessage::ControlPageCycle(forward) => {
                 self.control_page += if forward { 1 } else { -1 };
+                let control = self.get_control();
+                let Model::Battle(battle) = &mut self.model else {
+                    unreachable!(); //we already checked if we were in a battle
+                }; //these shenanigans are to satisfy the borrow checker b/c I didn't architect my
+                   //struct properly
+                if let Some(tile) = self.selected_tile {
+                    if control == Control::Movement && !battle.wizard_can_move(tile.into()) {
+                        self.selected_tile = None;
+                    }
+                }
             }
             BattleMessage::SpellChoose(spell_index) => {
                 self.current_spell_index = Some(spell_index);
-                if let SpellInputType::Position(i) =
+                if let SpellInputType::Position(i, _) =
                     battle.get_current_wizard().spells[spell_index].spell_input_type()
                 {
                     if let Some(pos) = self.selected_tile {
@@ -105,6 +120,18 @@ impl Controller {
                 }
             }
             BattleMessage::DirectionSelect(direction) => self.current_direction = Some(direction),
+            BattleMessage::ConfirmAction(control) => {
+                match control {
+                    view::controls::Control::Movement => battle.move_current_wizard_to(
+                        self.selected_tile
+                            .expect("Tile wasn't selected before moving")
+                            .into(),
+                    ),
+                    view::controls::Control::Spell => todo!(),
+                };
+
+                //TODO: add stuff for ending and starting a new turn
+            }
         }
     }
 
